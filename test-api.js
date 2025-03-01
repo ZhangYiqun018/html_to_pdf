@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 配置
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const API_URL = process.env.API_URL || 'https://htmlpdf.zeabur.app';
 const OUTPUT_DIR = path.join(__dirname, 'test-output');
 
 // 确保输出目录存在

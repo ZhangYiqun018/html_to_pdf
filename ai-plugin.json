@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "HTML/SVG to PDF/PNG Converter",
+  "name_for_model": "htmlPdfConverter",
+  "description_for_human": "将HTML或SVG内容转换为PDF或PNG格式的工具。支持直接传入内容或上传文件进行转换。需要API密钥进行认证。",
+  "description_for_model": "这个工具可以将HTML或SVG内容转换为PDF或PNG格式。你可以使用它来帮助用户将网页内容、HTML代码或SVG图形转换为可下载的PDF文档或PNG图像。支持指定CSS选择器来只转换特定的内容部分。使用返回URL的API端点(/api/convert/url和/api/convert/file/url)而不是直接返回文件的端点，以便在Dify等AI平台中使用。所有API请求都需要在请求头中包含有效的API密钥(X-API-Key)。",
+  "auth": {
+    "type": "service_http",
+    "authorization_type": "bearer",
+    "verification_tokens": {
+      "openai": "your_openai_verification_token_here"
+    }
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://htmlpdf.zeabur.app/openapi.yaml"
+  },
+  "logo_url": "https://htmlpdf.zeabur.app/logo.png",
+  "contact_email": "support@example.com",
+  "legal_info_url": "https://htmlpdf.zeabur.app/legal.html"
+} 

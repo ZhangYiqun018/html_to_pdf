@@ -1,0 +1,270 @@
+openapi: 3.0.0
+info:
+  title: HTML/SVG to PDF/PNG Converter API
+  description: |
+    API服务用于将HTML或SVG内容转换为PDF或PNG格式。
+    支持直接传入内容或上传文件进行转换。
+    
+    ## 鉴权说明
+    所有API端点都需要API密钥进行认证。您可以通过以下方式提供API密钥：
+    1. 在请求头中添加 `X-API-Key: your_api_key`
+    2. 在查询参数中添加 `?api_key=your_api_key`
+    3. 在请求体中添加 `"api_key": "your_api_key"`（仅适用于JSON请求）
+    
+    ## 速率限制
+    为了防止滥用，API实施了以下限制：
+    - 每个IP地址每5分钟最多可以发送20个API请求
+    - 每个API密钥每月有配额限制
+  version: 1.0.0
+  contact:
+    name: API Support
+servers:
+  - url: https://htmlpdf.zeabur.app
+    description: 生产环境服务器
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/convert:
+    post:
+      summary: 将HTML或SVG内容转换为PDF或PNG
+      description: |
+        通过提供HTML或SVG内容，将其转换为PDF或PNG格式。
+        可以指定选择器来只转换特定的内容部分。
+      operationId: convertContent
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertRequest'
+      responses:
+        '200':
+          description: 成功转换
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/convert/url:
+    post:
+      summary: 将HTML或SVG内容转换为PDF或PNG并返回文件URL
+      description: |
+        通过提供HTML或SVG内容，将其转换为PDF或PNG格式，并返回文件的URL。
+        可以指定选择器来只转换特定的内容部分。
+        此端点适用于需要获取文件URL而非直接下载文件的场景，如AI助手集成。
+      operationId: convertContentWithUrl
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertRequest'
+      responses:
+        '200':
+          description: 成功转换
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/convert/file:
+    post:
+      summary: 上传HTML或SVG文件并转换为PDF或PNG
+      description: |
+        通过上传HTML或SVG文件，将其转换为PDF或PNG格式。
+        可以指定选择器来只转换特定的内容部分。
+      operationId: convertFile
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 要转换的HTML或SVG文件
+                type:
+                  type: string
+                  enum: [html, svg]
+                  description: 文件类型
+                format:
+                  type: string
+                  enum: [pdf, png]
+                  description: 输出格式
+                selector:
+                  type: string
+                  description: CSS选择器，用于只转换特定的内容部分（仅适用于HTML）
+              required:
+                - file
+                - type
+                - format
+      responses:
+        '200':
+          description: 成功转换
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/convert/file/url:
+    post:
+      summary: 上传HTML或SVG文件并转换为PDF或PNG并返回文件URL
+      description: |
+        通过上传HTML或SVG文件，将其转换为PDF或PNG格式，并返回文件的URL。
+        可以指定选择器来只转换特定的内容部分。
+        此端点适用于需要获取文件URL而非直接下载文件的场景，如AI助手集成。
+      operationId: convertFileWithUrl
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 要转换的HTML或SVG文件
+                type:
+                  type: string
+                  enum: [html, svg]
+                  description: 文件类型
+                format:
+                  type: string
+                  enum: [pdf, png]
+                  description: 输出格式
+                selector:
+                  type: string
+                  description: CSS选择器，用于只转换特定的内容部分（仅适用于HTML）
+              required:
+                - file
+                - type
+                - format
+      responses:
+        '200':
+          description: 成功转换
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ConvertRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: HTML或SVG内容
+        type:
+          type: string
+          enum: [html, svg]
+          description: 内容类型
+        format:
+          type: string
+          enum: [pdf, png]
+          description: 输出格式
+        selector:
+          type: string
+          description: CSS选择器，用于只转换特定的内容部分（仅适用于HTML）
+      required:
+        - content
+        - type
+        - format
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: 错误消息
+    UrlResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        fileUrl:
+          type: string
+          description: 生成的文件URL
+          example: "https://htmlpdf.zeabur.app/output/12345678-1234-1234-1234-123456789012.pdf"
+        fileName:
+          type: string
+          description: 生成的文件名
+          example: "12345678-1234-1234-1234-123456789012.pdf"
+        fileType:
+          type: string
+          description: 文件MIME类型
+          example: "application/pdf"
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API密钥用于认证和授权 

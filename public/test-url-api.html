@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML/SVG转PDF/PNG API测试 - URL版本</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .card {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        textarea, input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .result-card {
+            background-color: #f0f9ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .error {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            background-color: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+        }
+        .download-link:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML/SVG转PDF/PNG API测试 - URL版本</h1>
+    
+    <div class="card">
+        <h2>API密钥设置</h2>
+        <p>所有API请求都需要提供有效的API密钥。</p>
+        <label for="apiKey">API密钥:</label>
+        <input type="text" id="apiKey" placeholder="输入您的API密钥" style="margin-bottom: 15px;">
+        <p><small>注意：API密钥将保存在浏览器的本地存储中，仅用于测试目的。</small></p>
+    </div>
+    
+    <div class="card">
+        <h2>HTML/SVG内容转换</h2>
+        <form id="contentForm">
+            <label for="content">HTML/SVG内容:</label>
+            <textarea id="content" name="content" required><h1>Hello World</h1><p>这是一个测试</p></textarea>
+            
+            <label for="contentType">内容类型:</label>
+            <select id="contentType" name="type" required>
+                <option value="html">HTML</option>
+                <option value="svg">SVG</option>
+            </select>
+            
+            <label for="contentFormat">输出格式:</label>
+            <select id="contentFormat" name="format" required>
+                <option value="pdf">PDF</option>
+                <option value="png">PNG</option>
+            </select>
+            
+            <label for="contentSelector">CSS选择器 (可选):</label>
+            <input type="text" id="contentSelector" name="selector" placeholder="例如: #main, .content">
+            
+            <button type="submit">转换</button>
+        </form>
+    </div>
+    
+    <div class="card">
+        <h2>文件上传转换</h2>
+        <form id="fileForm" enctype="multipart/form-data">
+            <label for="file">HTML/SVG文件:</label>
+            <input type="file" id="file" name="file" required>
+            
+            <label for="fileType">文件类型:</label>
+            <select id="fileType" name="type" required>
+                <option value="html">HTML</option>
+                <option value="svg">SVG</option>
+            </select>
+            
+            <label for="fileFormat">输出格式:</label>
+            <select id="fileFormat" name="format" required>
+                <option value="pdf">PDF</option>
+                <option value="png">PNG</option>
+            </select>
+            
+            <label for="fileSelector">CSS选择器 (可选):</label>
+            <input type="text" id="fileSelector" name="selector" placeholder="例如: #main, .content">
+            
+            <button type="submit">上传并转换</button>
+        </form>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        const API_URL = 'https://htmlpdf.zeabur.app';
+        
+        // 从本地存储加载API密钥
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedApiKey = localStorage.getItem('html_pdf_api_key');
+            if (savedApiKey) {
+                document.getElementById('apiKey').value = savedApiKey;
+            }
+        });
+        
+        // 保存API密钥到本地存储
+        document.getElementById('apiKey').addEventListener('change', function() {
+            localStorage.setItem('html_pdf_api_key', this.value);
+        });
+        
+        // 获取当前API密钥
+        function getApiKey() {
+            return document.getElementById('apiKey').value.trim();
+        }
+        
+        document.getElementById('contentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            
+            // 检查API密钥
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                resultDiv.innerHTML = `
+                    <div class="result-card error">
+                        <h3>错误</h3>
+                        <p>请输入API密钥</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>正在转换，请稍候...</p>';
+            
+            const formData = {
+                content: document.getElementById('content').value,
+                type: document.getElementById('contentType').value,
+                format: document.getElementById('contentFormat').value,
+                selector: document.getElementById('contentSelector').value || undefined
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/api/convert/url`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>转换成功!</h3>
+                            <p>文件类型: ${data.fileType}</p>
+                            <p>文件名: ${data.fileName}</p>
+                            <a href="${data.fileUrl}" class="download-link" target="_blank">下载文件</a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result-card error">
+                            <h3>转换失败</h3>
+                            <p>错误: ${data.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-card error">
+                        <h3>请求错误</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        document.getElementById('fileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            
+            // 检查API密钥
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                resultDiv.innerHTML = `
+                    <div class="result-card error">
+                        <h3>错误</h3>
+                        <p>请输入API密钥</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>正在上传并转换，请稍候...</p>';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/convert/file/url`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>转换成功!</h3>
+                            <p>文件类型: ${data.fileType}</p>
+                            <p>文件名: ${data.fileName}</p>
+                            <a href="${data.fileUrl}" class="download-link" target="_blank">下载文件</a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result-card error">
+                            <h3>转换失败</h3>
+                            <p>错误: ${data.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-card error">
+                        <h3>请求错误</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // 添加SVG示例
+        document.getElementById('contentType').addEventListener('change', function() {
+            const contentArea = document.getElementById('content');
+            if (this.value === 'svg') {
+                contentArea.value = '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="80" fill="blue"/></svg>';
+            } else {
+                contentArea.value = '<h1>Hello World</h1><p>这是一个测试</p>';
+            }
+        });
+    </script>
+</body>
+</html> 

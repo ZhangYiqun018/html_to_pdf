@@ -7,7 +7,10 @@ import { createRequire } from 'module';
 import dotenv from 'dotenv';
 
 // 导入API处理函数
-import { handleConvertRequest, handleFileConvertRequest } from './api/convert.js';
+import { handleConvertRequest, handleFileConvertRequest, handleConvertRequestWithUrl, handleFileConvertRequestWithUrl } from './api/convert.js';
+
+// 导入鉴权中间件
+import { globalRateLimit, protectApi, ipWhitelist } from './middleware/auth.js';
 
 // 加载环境变量
 dotenv.config();
@@ -40,6 +43,7 @@ const createFolders = async () => {
   try {
     await fs.mkdir(path.join(__dirname, 'uploads'), { recursive: true });
     await fs.mkdir(path.join(__dirname, 'output'), { recursive: true });
+    await fs.mkdir(path.join(__dirname, '.well-known'), { recursive: true });
   } catch (err) {
     console.error('Error creating folders:', err);
   }
@@ -301,11 +305,60 @@ async function convertSvg(svgContent, format) {
   }
 }
 
-// 添加API路由 - 内容转换
-app.post('/api/convert', express.json({ limit: '10mb' }), handleConvertRequest);
+// 添加API路由 - 内容转换（添加保护）
+app.post('/api/convert', express.json({ limit: '10mb' }), protectApi, handleConvertRequest);
 
-// 添加API路由 - 文件上传转换
-app.post('/api/convert/file', upload.single('file'), handleFileConvertRequest);
+// 添加API路由 - 文件上传转换（添加保护）
+app.post('/api/convert/file', protectApi, upload.single('file'), handleFileConvertRequest);
+
+// 添加API路由 - 内容转换（返回URL）（添加保护）
+app.post('/api/convert/url', express.json({ limit: '10mb' }), protectApi, handleConvertRequestWithUrl);
+
+// 添加API路由 - 文件上传转换（返回URL）（添加保护）
+app.post('/api/convert/file/url', protectApi, upload.single('file'), handleFileConvertRequestWithUrl);
+
+// 添加OpenAPI规范文件路由
+app.get('/openapi.yaml', async (req, res) => {
+  try {
+    const openapiContent = await fs.readFile(path.join(__dirname, 'openapi.yaml'), 'utf8');
+    res.setHeader('Content-Type', 'text/yaml');
+    res.send(openapiContent);
+  } catch (error) {
+    console.error('Error serving OpenAPI spec:', error);
+    res.status(500).send('Error serving OpenAPI specification');
+  }
+});
+
+// 添加ChatGPT Plugin Manifest路由
+app.get('/.well-known/ai-plugin.json', async (req, res) => {
+  try {
+    const pluginContent = await fs.readFile(path.join(__dirname, 'ai-plugin.json'), 'utf8');
+    res.setHeader('Content-Type', 'application/json');
+    res.send(pluginContent);
+  } catch (error) {
+    console.error('Error serving Plugin Manifest:', error);
+    res.status(500).send('Error serving Plugin Manifest');
+  }
+});
+
+// 添加CORS支持
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, X-API-Key, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// 添加全局速率限制
+app.use(globalRateLimit);
+
+// 可选：添加IP白名单保护（默认不启用）
+if (process.env.IP_WHITELIST_REQUIRED === 'true') {
+  app.use(ipWhitelist);
+}
 
 // 启动服务器
 app.listen(port, () => {

@@ -195,4 +195,92 @@ export async function handleFileConvertRequest(req, res) {
     console.error('文件转换错误:', error);
     res.status(500).json({ error: '处理文件转换请求时出错: ' + error.message });
   }
+}
+
+/**
+ * 处理转换请求并返回文件URL而非文件内容
+ * @param {Object} req - 请求对象
+ * @param {Object} res - 响应对象
+ */
+export async function handleConvertRequestWithUrl(req, res) {
+  try {
+    // 验证请求参数
+    const { content, type, format, selector } = req.body;
+    
+    if (!content) {
+      return res.status(400).json({ success: false, error: '内容不能为空' });
+    }
+    
+    if (!type || !['html', 'svg'].includes(type)) {
+      return res.status(400).json({ success: false, error: '类型必须是 html 或 svg' });
+    }
+    
+    if (!format || !['pdf', 'png'].includes(format)) {
+      return res.status(400).json({ success: false, error: '格式必须是 pdf 或 png' });
+    }
+    
+    // 生成唯一的输出文件名
+    const outputFileName = `${uuidv4()}.${format}`;
+    const outputPath = path.join(OUTPUT_DIR, outputFileName);
+    
+    // 转换内容
+    await convertContent(content, type, format, selector, outputPath);
+    
+    // 构建文件URL
+    const baseUrl = process.env.BASE_URL || `http://${req.headers.host}`;
+    const fileUrl = `${baseUrl}/output/${outputFileName}`;
+    
+    // 返回成功响应和文件URL
+    res.json({
+      success: true,
+      fileUrl: fileUrl,
+      fileName: outputFileName,
+      fileType: format === 'pdf' ? 'application/pdf' : 'image/png'
+    });
+  } catch (error) {
+    console.error('转换错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+}
+
+/**
+ * 处理文件转换请求并返回文件URL而非文件内容
+ * @param {Object} req - 请求对象
+ * @param {Object} res - 响应对象
+ */
+export async function handleFileConvertRequestWithUrl(req, res) {
+  try {
+    // 验证请求参数
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: '未上传文件' });
+    }
+    
+    const { type, format, selector } = req.body;
+    
+    if (!type || !['html', 'svg'].includes(type)) {
+      return res.status(400).json({ success: false, error: '类型必须是 html 或 svg' });
+    }
+    
+    if (!format || !['pdf', 'png'].includes(format)) {
+      return res.status(400).json({ success: false, error: '格式必须是 pdf 或 png' });
+    }
+    
+    // 读取上传的文件内容
+    const content = await fs.promises.readFile(req.file.path, 'utf8');
+    
+    // 使用handleConvertRequestWithUrl处理转换
+    req.body.content = content;
+    return handleConvertRequestWithUrl(req, res);
+  } catch (error) {
+    console.error('文件转换错误:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 } 

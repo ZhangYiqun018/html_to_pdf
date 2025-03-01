@@ -17,7 +17,7 @@ test_server() {
   print_message "测试API服务器是否运行..." "$BLUE"
   
   # 默认API地址
-  API_URL=${1:-"http://localhost:3000"}
+  API_URL=${1:-"https://htmlpdf.zeabur.app"}
   
   # 测试服务器连接
   if curl -s --head "$API_URL" > /dev/null; then
@@ -42,7 +42,7 @@ test_html_to_pdf() {
     -H "Content-Type: application/json" \
     -d "{\"content\": \"$HTML_CONTENT\", \"type\": \"html\", \"format\": \"pdf\"}" \
     --output test-html.pdf \
-    http://localhost:3000/api/convert
+    https://htmlpdf.zeabur.app/api/convert
   
   # 检查结果
   if [ -f "test-html.pdf" ] && [ -s "test-html.pdf" ]; then
@@ -65,7 +65,7 @@ test_svg_to_png() {
     -H "Content-Type: application/json" \
     -d "{\"content\": \"$SVG_CONTENT\", \"type\": \"svg\", \"format\": \"png\"}" \
     --output test-svg.png \
-    http://localhost:3000/api/convert
+    https://htmlpdf.zeabur.app/api/convert
   
   # 检查结果
   if [ -f "test-svg.png" ] && [ -s "test-svg.png" ]; then
@@ -89,7 +89,7 @@ test_file_upload() {
     -F "type=html" \
     -F "format=pdf" \
     --output test-upload.pdf \
-    http://localhost:3000/api/convert/file
+    https://htmlpdf.zeabur.app/api/convert/file
   
   # 检查结果
   if [ -f "test-upload.pdf" ] && [ -s "test-upload.pdf" ]; then

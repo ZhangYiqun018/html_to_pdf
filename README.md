@@ -1,153 +1,64 @@
-# HTML/SVG转PDF/PNG工具
+# HTML/SVG转PDF/PNG API服务
 
-这是一个简单的Web应用程序，可以将HTML或SVG内容转换为裁剪后的PDF或PNG格式。
+这是一个简单的API服务，用于将HTML或SVG内容转换为PDF或PNG格式。支持直接传入内容或上传文件进行转换。
 
-## 功能特点
+## 主要功能
 
-- 支持HTML文本直接输入和文件上传
-- 支持SVG文本直接输入和文件上传
-- 可以选择输出格式（PDF或PNG）
-- 支持使用CSS选择器裁剪HTML中的特定元素
-- 支持SVG预览功能
-- 简洁直观的用户界面
-- 在HTML和SVG转换功能之间轻松切换
+- 将HTML内容转换为PDF或PNG
+- 将SVG内容转换为PDF或PNG
+- 支持上传HTML或SVG文件进行转换
+- 支持使用CSS选择器只转换特定内容
+- 提供直接返回文件内容的API端点
+- 提供返回文件URL的API端点（适用于AI助手集成）
+
+## API端点
+
+### 直接返回文件内容的端点
+
+- `POST /api/convert` - 将HTML或SVG内容转换为PDF或PNG
+- `POST /api/convert/file` - 上传HTML或SVG文件并转换为PDF或PNG
+
+### 返回文件URL的端点（适用于AI助手集成）
+
+- `POST /api/convert/url` - 将HTML或SVG内容转换为PDF或PNG并返回文件URL
+- `POST /api/convert/file/url` - 上传HTML或SVG文件并转换为PDF或PNG并返回文件URL
+
+## Dify集成
+
+本项目支持作为自定义工具集成到Dify平台中。详细的集成指南请参考 [DIFY_INTEGRATION.md](DIFY_INTEGRATION.md)。
+
+### 为什么需要返回URL的API端点？
+
+Dify和其他AI助手平台通常无法直接处理二进制文件响应。为了解决这个问题，我们提供了专门的API端点，它们不直接返回文件内容，而是返回包含文件URL的JSON响应。这样，AI助手可以向用户提供下载链接，而不是尝试直接处理二进制文件。
 
 ## 技术栈
 
 - Node.js
 - Express.js
-- html-pdf (用于HTML/SVG渲染和PDF/PNG生成)
-- EJS (模板引擎)
-- Multer (文件上传处理)
-- dotenv (环境变量管理)
+- html-pdf库（用于HTML/SVG转换）
 
-## 安装步骤
+## 安装和运行
 
-1. 确保已安装Node.js (推荐v14.0.0或更高版本)
+1. 克隆仓库
+2. 安装依赖：`npm install`
+3. 运行服务：`node index.js`
 
-2. 克隆或下载此仓库
+默认情况下，服务将在 http://localhost:3000 上运行。
 
-3. 安装依赖项：
-   ```
-   npm install
-   ```
+## 环境变量
 
-4. 配置环境变量：
-   - 复制`.env.example`文件并重命名为`.env`
-   - 在`.env`文件中填入您的配置
+- `PORT` - 服务器端口（默认：3000）
+- `NODE_ENV` - 环境模式（development/production）
+- `BASE_URL` - 基础URL，用于生成文件URL（默认：根据请求头自动检测）
 
-5. 启动应用（两种方式）：
+## 测试
 
-   **使用启动脚本（推荐）**：
-   ```
-   ./start.sh
-   ```
-   启动脚本会自动检查环境、安装依赖、创建必要的目录，并启动应用程序。
+项目包含多种测试工具：
 
-   **或者使用npm**：
-   ```
-   npm start
-   ```
-
-6. 在浏览器中访问：
-   ```
-   http://localhost:3000
-   ```
-
-## 使用方法
-
-### HTML转换
-
-#### 通过HTML文本转换
-
-1. 在主页的"HTML文本输入"标签页中，粘贴您的HTML代码
-2. 输入CSS选择器以指定要裁剪的元素（默认为"body"）
-3. 选择输出格式（PDF或PNG）
-4. 点击"转换"按钮
-5. 等待处理完成后，点击链接查看或下载生成的文件
-
-#### 通过HTML文件转换
-
-1. 切换到"HTML文件上传"标签页
-2. 选择要上传的HTML文件
-3. 输入CSS选择器以指定要裁剪的元素（默认为"body"）
-4. 选择输出格式（PDF或PNG）
-5. 点击"转换"按钮
-6. 等待处理完成后，点击链接查看或下载生成的文件
-
-### SVG转换
-
-#### 通过SVG文本转换
-
-1. 点击导航栏中的"SVG转换"链接
-2. 在"SVG文本输入"标签页中，粘贴您的SVG代码
-3. 选择输出格式（PNG或PDF）
-4. 可以点击"预览SVG"按钮查看SVG的预览效果
-5. 点击"转换"按钮
-6. 等待处理完成后，点击链接查看或下载生成的文件
-
-#### 通过SVG文件转换
-
-1. 点击导航栏中的"SVG转换"链接
-2. 切换到"SVG文件上传"标签页
-3. 选择要上传的SVG文件
-4. 选择输出格式（PNG或PDF）
-5. 可以点击"预览SVG"按钮查看SVG的预览效果
-6. 点击"转换"按钮
-7. 等待处理完成后，点击链接查看或下载生成的文件
-
-## 实现细节
-
-### HTML转换
-
-- 使用html-pdf库渲染HTML并生成PDF/PNG
-- 支持通过CSS选择器精确裁剪页面元素
-- 高效稳定的转换流程
-
-### SVG转换
-
-- 将SVG嵌入到HTML页面中进行渲染
-- 自动添加宽度和高度（如果SVG中未指定）
-- PNG输出使用透明背景
-- 使用更高的设备缩放比例以获得更清晰的图像
-
-## 部署到Zeabur
-
-本项目可以轻松部署到Zeabur平台：
-
-1. 在Zeabur上创建一个新项目
-2. 将代码推送到GitHub仓库
-3. 在Zeabur中连接GitHub仓库
-4. 选择自动部署选项
-5. 设置以下环境变量（可选）：
-   - `PORT`: 应用程序监听的端口（Zeabur会自动设置）
-   - `OUTPUT_DIR`: 输出文件的目录（默认为'output'）
-6. 部署完成后，Zeabur会提供一个URL以访问您的应用
-
-## 注意事项
-
-- 生成的文件会临时存储在服务器的`output`目录中
-- 上传的文件会临时存储在服务器的`uploads`目录中
-- 对于复杂的HTML/SVG，可能需要更长的处理时间
-- 确保CSS选择器正确，否则可能无法找到要裁剪的元素
-- SVG应包含有效的XML声明和SVG命名空间
-
-## 开发检查点
-
-### 2023-XX-XX：初始版本
-- 实现基本的HTML到PDF/PNG转换功能
-- 创建用户界面和文件处理逻辑
-
-### 2025-02-26：SVG支持版本
-- 添加SVG转换功能，支持SVG到PNG/PDF的转换
-- 实现SVG预览功能
-- 添加HTML和SVG转换页面之间的导航链接
-- 改进错误处理和用户体验
-
-### 2025-03-01：优化版本
-- 移除Puppeteer依赖，使用更轻量级的html-pdf库
-- 优化代码结构，提高稳定性
-- 添加Zeabur部署支持
+- `test-api.js` - Node.js测试脚本
+- `test-api.sh` - Shell测试脚本
+- `test-api.html` - 浏览器测试页面
+- `public/test-url-api.html` - 测试返回URL的API端点的页面
 
 ## 许可证
 
