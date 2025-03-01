@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文渲染测试工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #1a73e8;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        
+        .btn-group {
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #1557b0;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #34a853;
+        }
+        
+        .result a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .result a:hover {
+            text-decoration: underline;
+        }
+        
+        .error {
+            background-color: #fce8e8;
+            border-left: 4px solid #ea4335;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #1a73e8;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>中文渲染测试工具</h1>
+        
+        <p>这个工具可以帮助您测试HTML到PDF/PNG转换过程中的中文字符渲染和布局保持情况。点击下面的按钮生成测试文件。</p>
+        
+        <div class="btn-group">
+            <button id="testPdf">生成PDF测试</button>
+            <button id="testPng">生成PNG测试</button>
+            <button id="viewHtml">查看HTML源文件</button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>正在生成文件，请稍候...</p>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+    
+    <script>
+        document.getElementById('testPdf').addEventListener('click', () => generateTest('pdf'));
+        document.getElementById('testPng').addEventListener('click', () => generateTest('png'));
+        document.getElementById('viewHtml').addEventListener('click', () => {
+            window.open('/chinese-test.html', '_blank');
+        });
+        
+        function generateTest(format) {
+            const loadingEl = document.getElementById('loading');
+            const resultEl = document.getElementById('result');
+            const errorEl = document.getElementById('error');
+            
+            // 重置显示状态
+            loadingEl.style.display = 'block';
+            resultEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            
+            // 发送请求
+            fetch(`/test-chinese?format=${format}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    
+                    if (data.success) {
+                        resultEl.innerHTML = `
+                            <h3>测试文件已生成</h3>
+                            <p>文件类型: ${data.fileType}</p>
+                            <p>文件名: ${data.fileName}</p>
+                            <p><a href="${data.fileUrl}" target="_blank">点击查看生成的${format.toUpperCase()}文件</a></p>
+                        `;
+                        resultEl.style.display = 'block';
+                    } else {
+                        errorEl.innerHTML = `
+                            <h3>生成失败</h3>
+                            <p>${data.error}</p>
+                            ${data.details ? `<p>详细信息: ${data.details}</p>` : ''}
+                        `;
+                        errorEl.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    loadingEl.style.display = 'none';
+                    errorEl.innerHTML = `
+                        <h3>请求错误</h3>
+                        <p>${error.message}</p>
+                    `;
+                    errorEl.style.display = 'block';
+                });
+        }
+    </script>
+</body>
+</html> 

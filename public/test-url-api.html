@@ -86,10 +86,15 @@
     
     <div class="card">
         <h2>API密钥设置</h2>
-        <p>所有API请求都需要提供有效的API密钥。</p>
+        <p>所有API请求都需要提供有效的认证凭据。</p>
         <label for="apiKey">API密钥:</label>
         <input type="text" id="apiKey" placeholder="输入您的API密钥" style="margin-bottom: 15px;">
-        <p><small>注意：API密钥将保存在浏览器的本地存储中，仅用于测试目的。</small></p>
+        <label for="authType">认证方式:</label>
+        <select id="authType" style="margin-bottom: 15px;">
+            <option value="bearer">Bearer Token（推荐）</option>
+            <option value="apikey">X-API-Key</option>
+        </select>
+        <p><small>注意：认证凭据将保存在浏览器的本地存储中，仅用于测试目的。</small></p>
     </div>
     
     <div class="card">
@@ -147,11 +152,16 @@
     <script>
         const API_URL = 'https://htmlpdf.zeabur.app';
         
-        // 从本地存储加载API密钥
+        // 从本地存储加载API密钥和认证方式
         document.addEventListener('DOMContentLoaded', function() {
             const savedApiKey = localStorage.getItem('html_pdf_api_key');
             if (savedApiKey) {
                 document.getElementById('apiKey').value = savedApiKey;
+            }
+            
+            const savedAuthType = localStorage.getItem('html_pdf_auth_type');
+            if (savedAuthType) {
+                document.getElementById('authType').value = savedAuthType;
             }
         });
         
@@ -160,18 +170,50 @@
             localStorage.setItem('html_pdf_api_key', this.value);
         });
         
+        // 保存认证方式到本地存储
+        document.getElementById('authType').addEventListener('change', function() {
+            localStorage.setItem('html_pdf_auth_type', this.value);
+        });
+        
         // 获取当前API密钥
         function getApiKey() {
             return document.getElementById('apiKey').value.trim();
+        }
+        
+        // 获取当前认证方式
+        function getAuthType() {
+            return document.getElementById('authType').value;
+        }
+        
+        // 获取认证头
+        function getAuthHeaders() {
+            const apiKey = getApiKey();
+            const authType = getAuthType();
+            
+            if (!apiKey) {
+                return null;
+            }
+            
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (authType === 'bearer') {
+                headers['Authorization'] = `Bearer ${apiKey}`;
+            } else {
+                headers['X-API-Key'] = apiKey;
+            }
+            
+            return headers;
         }
         
         document.getElementById('contentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const resultDiv = document.getElementById('result');
             
-            // 检查API密钥
-            const apiKey = getApiKey();
-            if (!apiKey) {
+            // 获取认证头
+            const headers = getAuthHeaders();
+            if (!headers) {
                 resultDiv.innerHTML = `
                     <div class="result-card error">
                         <h3>错误</h3>
@@ -193,10 +235,7 @@
             try {
                 const response = await fetch(`${API_URL}/api/convert/url`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
+                    headers: headers,
                     body: JSON.stringify(formData)
                 });
                 
@@ -233,8 +272,10 @@
             e.preventDefault();
             const resultDiv = document.getElementById('result');
             
-            // 检查API密钥
+            // 获取API密钥和认证方式
             const apiKey = getApiKey();
+            const authType = getAuthType();
+            
             if (!apiKey) {
                 resultDiv.innerHTML = `
                     <div class="result-card error">
@@ -250,11 +291,16 @@
             const formData = new FormData(this);
             
             try {
+                const headers = {};
+                if (authType === 'bearer') {
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                } else {
+                    headers['X-API-Key'] = apiKey;
+                }
+                
                 const response = await fetch(`${API_URL}/api/convert/file/url`, {
                     method: 'POST',
-                    headers: {
-                        'X-API-Key': apiKey
-                    },
+                    headers: headers,
                     body: formData
                 });
                 

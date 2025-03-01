@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码块预处理和比例保持测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #1a73e8;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #34a853;
+            margin-top: 30px;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #1a73e8;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #1557b0;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f0fe;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .result a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .result a:hover {
+            text-decoration: underline;
+        }
+        
+        .error {
+            background-color: #fce8e8;
+            border-left: 4px solid #ea4335;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #1a73e8;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>代码块预处理和比例保持测试</h1>
+        
+        <p>这个工具用于测试代码块预处理和比例保持功能。您可以输入包含代码块标记的HTML或SVG内容，系统会自动移除代码块标记并保持原始比例进行转换。</p>
+        
+        <div class="test-section">
+            <h2>HTML代码块测试</h2>
+            <textarea id="htmlInput">```html
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 20px; }
+        .box {
+            width: 300px;
+            height: 200px;
+            background: linear-gradient(45deg, #ff0000, #00ff00);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">保持原始比例测试</div>
+</body>
+</html>
+```</textarea>
+            <div>
+                <button onclick="testConversion('html', 'pdf')">转换为PDF</button>
+                <button onclick="testConversion('html', 'png')">转换为PNG</button>
+            </div>
+            <div id="htmlLoading" class="loading">
+                <div class="spinner"></div>
+                <p>正在处理，请稍候...</p>
+            </div>
+            <div id="htmlResult" class="result"></div>
+            <div id="htmlError" class="error"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>SVG代码块测试</h2>
+            <textarea id="svgInput">```svg
+<svg width="400" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="380" height="180" rx="10" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+    <circle cx="100" cy="100" r="50" fill="#ff6b6b"/>
+    <rect x="200" y="50" width="150" height="100" fill="#4ecdc4"/>
+    <text x="200" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#333">保持原始比例</text>
+    <text x="100" y="100" font-family="Arial" font-size="18" text-anchor="middle" fill="white">圆形</text>
+    <text x="275" y="100" font-family="Arial" font-size="18" text-anchor="middle" fill="white">矩形</text>
+</svg>
+```</textarea>
+            <div>
+                <button onclick="testConversion('svg', 'pdf')">转换为PDF</button>
+                <button onclick="testConversion('svg', 'png')">转换为PNG</button>
+            </div>
+            <div id="svgLoading" class="loading">
+                <div class="spinner"></div>
+                <p>正在处理，请稍候...</p>
+            </div>
+            <div id="svgResult" class="result"></div>
+            <div id="svgError" class="error"></div>
+        </div>
+    </div>
+    
+    <script>
+        function testConversion(type, format) {
+            const inputId = type + 'Input';
+            const loadingId = type + 'Loading';
+            const resultId = type + 'Result';
+            const errorId = type + 'Error';
+            
+            const content = document.getElementById(inputId).value;
+            
+            // 显示加载状态
+            document.getElementById(loadingId).style.display = 'block';
+            document.getElementById(resultId).style.display = 'none';
+            document.getElementById(errorId).style.display = 'none';
+            
+            // 发送API请求
+            fetch('/api/convert/url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer bd80f4039ac862812537f06691bf28c563a727725278911d'
+                },
+                body: JSON.stringify({
+                    content: content,
+                    type: type,
+                    format: format
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById(loadingId).style.display = 'none';
+                
+                if (data.success) {
+                    const resultElement = document.getElementById(resultId);
+                    resultElement.innerHTML = `
+                        <h3>转换成功</h3>
+                        <p>文件类型: ${data.fileType}</p>
+                        <p>文件名: ${data.fileName}</p>
+                        <p><a href="${data.fileUrl}" target="_blank">点击查看生成的${format.toUpperCase()}文件</a></p>
+                    `;
+                    resultElement.style.display = 'block';
+                } else {
+                    const errorElement = document.getElementById(errorId);
+                    errorElement.innerHTML = `
+                        <h3>转换失败</h3>
+                        <p>${data.error || '未知错误'}</p>
+                    `;
+                    errorElement.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById(loadingId).style.display = 'none';
+                
+                const errorElement = document.getElementById(errorId);
+                errorElement.innerHTML = `
+                    <h3>请求错误</h3>
+                    <p>${error.message}</p>
+                `;
+                errorElement.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html> 

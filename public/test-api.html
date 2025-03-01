@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML/SVG 转 PDF/PNG API 测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            min-height: 100px;
+        }
+        .api-key-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #eee;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML/SVG 转 PDF/PNG API 测试</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>API设置</h2>
+            <div>
+                <label for="api-key">API密钥 (可选):</label>
+                <input type="text" id="api-key" class="api-key-input" placeholder="输入API密钥">
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="html-tab">HTML转换</div>
+        <div class="tab" data-tab="svg-tab">SVG转换</div>
+        <div class="tab" data-tab="file-tab">文件上传</div>
+    </div>
+
+    <div class="tab-content active" id="html-tab">
+        <div class="container">
+            <div class="panel">
+                <h2>HTML转换</h2>
+                <textarea id="html-content" placeholder="输入HTML内容"><!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; }
+        h1 { color: #2c3e50; }
+        p { line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HTML转PDF/PNG测试</h1>
+        <p>这是一个测试文档，用于测试HTML转PDF/PNG功能。</p>
+        <p>支持中文：这是中文内容测试。</p>
+        <ul>
+            <li>项目一</li>
+            <li>项目二</li>
+            <li>项目三</li>
+        </ul>
+    </div>
+</body>
+</html></textarea>
+                <div>
+                    <label for="html-format">格式:</label>
+                    <select id="html-format">
+                        <option value="pdf">PDF</option>
+                        <option value="png">PNG</option>
+                    </select>
+                    <label for="html-selector">选择器 (可选):</label>
+                    <input type="text" id="html-selector" placeholder="例如: body" value="body">
+                </div>
+                <div>
+                    <button id="convert-html-simple">使用简化API</button>
+                    <button id="convert-html-api">使用API (返回文件)</button>
+                    <button id="convert-html-api-url">使用API (返回URL)</button>
+                </div>
+                <div class="result" id="html-result">
+                    <p>结果将显示在这里...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="svg-tab">
+        <div class="container">
+            <div class="panel">
+                <h2>SVG转换</h2>
+                <textarea id="svg-content" placeholder="输入SVG内容"><svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="180" height="180" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+    <circle cx="100" cy="100" r="50" fill="#4CAF50"/>
+    <text x="100" y="100" text-anchor="middle" fill="white" font-size="16">SVG测试</text>
+</svg></textarea>
+                <div>
+                    <label for="svg-format">格式:</label>
+                    <select id="svg-format">
+                        <option value="png">PNG</option>
+                        <option value="pdf">PDF</option>
+                    </select>
+                </div>
+                <div>
+                    <button id="convert-svg-simple">使用简化API</button>
+                    <button id="convert-svg-api">使用API (返回文件)</button>
+                    <button id="convert-svg-api-url">使用API (返回URL)</button>
+                </div>
+                <div class="result" id="svg-result">
+                    <p>结果将显示在这里...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="file-tab">
+        <div class="container">
+            <div class="panel">
+                <h2>文件上传</h2>
+                <div>
+                    <label for="file-type">文件类型:</label>
+                    <select id="file-type">
+                        <option value="html">HTML</option>
+                        <option value="svg">SVG</option>
+                    </select>
+                    <label for="file-format">格式:</label>
+                    <select id="file-format">
+                        <option value="pdf">PDF</option>
+                        <option value="png">PNG</option>
+                    </select>
+                    <label for="file-selector">选择器 (仅HTML):</label>
+                    <input type="text" id="file-selector" placeholder="例如: body" value="body">
+                </div>
+                <div>
+                    <input type="file" id="file-input">
+                </div>
+                <div>
+                    <button id="convert-file-simple">使用简化API</button>
+                    <button id="convert-file-api">使用API (返回文件)</button>
+                    <button id="convert-file-api-url">使用API (返回URL)</button>
+                </div>
+                <div class="result" id="file-result">
+                    <p>结果将显示在这里...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换标签页
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // 获取API密钥
+        function getApiKey() {
+            return document.getElementById('api-key').value.trim();
+        }
+
+        // 添加API密钥到请求头
+        function addApiKeyToHeaders(headers) {
+            const apiKey = getApiKey();
+            if (apiKey) {
+                headers['Authorization'] = `Bearer ${apiKey}`;
+            }
+            return headers;
+        }
+
+        // HTML转换 - 简化API
+        document.getElementById('convert-html-simple').addEventListener('click', async () => {
+            const htmlContent = document.getElementById('html-content').value;
+            const format = document.getElementById('html-format').value;
+            const selector = document.getElementById('html-selector').value;
+            const resultDiv = document.getElementById('html-result');
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            try {
+                const response = await fetch(`/convert-html?format=${format}&selector=${selector}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: htmlContent
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p>文件路径: ${result.filePath}</p>
+                        <p><a href="/${result.filePath}" target="_blank">查看文件</a></p>
+                        ${format === 'png' ? `<img src="/${result.filePath}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // HTML转换 - API (返回文件)
+        document.getElementById('convert-html-api').addEventListener('click', async () => {
+            const htmlContent = document.getElementById('html-content').value;
+            const format = document.getElementById('html-format').value;
+            const selector = document.getElementById('html-selector').value;
+            const resultDiv = document.getElementById('html-result');
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: addApiKeyToHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify({
+                        content: htmlContent,
+                        type: 'html',
+                        format: format,
+                        selector: selector
+                    })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                        ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${error.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // HTML转换 - API (返回URL)
+        document.getElementById('convert-html-api-url').addEventListener('click', async () => {
+            const htmlContent = document.getElementById('html-content').value;
+            const format = document.getElementById('html-format').value;
+            const selector = document.getElementById('html-selector').value;
+            const resultDiv = document.getElementById('html-result');
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            try {
+                const response = await fetch('/api/convert/url', {
+                    method: 'POST',
+                    headers: addApiKeyToHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify({
+                        content: htmlContent,
+                        type: 'html',
+                        format: format,
+                        selector: selector
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p>文件URL: ${result.fileUrl}</p>
+                        <p>文件名: ${result.fileName}</p>
+                        <p>文件类型: ${result.fileType}</p>
+                        <p><a href="${result.fileUrl}" target="_blank">查看文件</a></p>
+                        ${format === 'png' ? `<img src="${result.fileUrl}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // SVG转换 - 简化API
+        document.getElementById('convert-svg-simple').addEventListener('click', async () => {
+            const svgContent = document.getElementById('svg-content').value;
+            const format = document.getElementById('svg-format').value;
+            const resultDiv = document.getElementById('svg-result');
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            try {
+                const response = await fetch(`/convert-svg?format=${format}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: svgContent
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p>文件路径: ${result.filePath}</p>
+                        <p><a href="/${result.filePath}" target="_blank">查看文件</a></p>
+                        ${format === 'png' ? `<img src="/${result.filePath}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // SVG转换 - API (返回文件)
+        document.getElementById('convert-svg-api').addEventListener('click', async () => {
+            const svgContent = document.getElementById('svg-content').value;
+            const format = document.getElementById('svg-format').value;
+            const resultDiv = document.getElementById('svg-result');
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: addApiKeyToHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify({
+                        content: svgContent,
+                        type: 'svg',
+                        format: format
+                    })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                        ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${error.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // SVG转换 - API (返回URL)
+        document.getElementById('convert-svg-api-url').addEventListener('click', async () => {
+            const svgContent = document.getElementById('svg-content').value;
+            const format = document.getElementById('svg-format').value;
+            const resultDiv = document.getElementById('svg-result');
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            try {
+                const response = await fetch('/api/convert/url', {
+                    method: 'POST',
+                    headers: addApiKeyToHeaders({
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify({
+                        content: svgContent,
+                        type: 'svg',
+                        format: format
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p>文件URL: ${result.fileUrl}</p>
+                        <p>文件名: ${result.fileName}</p>
+                        <p>文件类型: ${result.fileType}</p>
+                        <p><a href="${result.fileUrl}" target="_blank">查看文件</a></p>
+                        ${format === 'png' ? `<img src="${result.fileUrl}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // 文件上传 - 简化API
+        document.getElementById('convert-file-simple').addEventListener('click', async () => {
+            const fileInput = document.getElementById('file-input');
+            const fileType = document.getElementById('file-type').value;
+            const format = document.getElementById('file-format').value;
+            const selector = document.getElementById('file-selector').value;
+            const resultDiv = document.getElementById('file-result');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                resultDiv.innerHTML = '<p class="error">请选择文件</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            const formData = new FormData();
+            formData.append(fileType === 'html' ? 'htmlFile' : 'svgFile', fileInput.files[0]);
+            formData.append('format', format);
+            if (fileType === 'html') {
+                formData.append('selector', selector);
+            }
+            
+            try {
+                const response = await fetch(fileType === 'html' ? '/convert-file' : '/convert-svg-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p>文件路径: ${result.filePath}</p>
+                        <p><a href="/${result.filePath}" target="_blank">查看文件</a></p>
+                        ${format === 'png' ? `<img src="/${result.filePath}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // 文件上传 - API (返回文件)
+        document.getElementById('convert-file-api').addEventListener('click', async () => {
+            const fileInput = document.getElementById('file-input');
+            const fileType = document.getElementById('file-type').value;
+            const format = document.getElementById('file-format').value;
+            const selector = document.getElementById('file-selector').value;
+            const resultDiv = document.getElementById('file-result');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                resultDiv.innerHTML = '<p class="error">请选择文件</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', fileType);
+            formData.append('format', format);
+            if (fileType === 'html') {
+                formData.append('selector', selector);
+            }
+            
+            try {
+                const response = await fetch('/api/convert/file', {
+                    method: 'POST',
+                    headers: addApiKeyToHeaders({}),
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                        ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${error.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+
+        // 文件上传 - API (返回URL)
+        document.getElementById('convert-file-api-url').addEventListener('click', async () => {
+            const fileInput = document.getElementById('file-input');
+            const fileType = document.getElementById('file-type').value;
+            const format = document.getElementById('file-format').value;
+            const selector = document.getElementById('file-selector').value;
+            const resultDiv = document.getElementById('file-result');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                resultDiv.innerHTML = '<p class="error">请选择文件</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>正在转换...</p>';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', fileType);
+            formData.append('format', format);
+            if (fileType === 'html') {
+                formData.append('selector', selector);
+            }
+            
+            try {
+                const response = await fetch('/api/convert/file/url', {
+                    method: 'POST',
+                    headers: addApiKeyToHeaders({}),
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">转换成功!</p>
+                        <p>文件URL: ${result.fileUrl}</p>
+                        <p>文件名: ${result.fileName}</p>
+                        <p>文件类型: ${result.fileType}</p>
+                        <p><a href="${result.fileUrl}" target="_blank">查看文件</a></p>
+                        ${format === 'png' ? `<img src="${result.fileUrl}" alt="转换结果">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html> 

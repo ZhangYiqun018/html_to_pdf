@@ -6,7 +6,12 @@ info:
     支持直接传入内容或上传文件进行转换。
     
     ## 鉴权说明
-    所有API端点都需要API密钥进行认证。您可以通过以下方式提供API密钥：
+    所有API端点都需要认证。您可以通过以下方式提供认证凭据：
+    
+    ### 方式一：Bearer Token（推荐）
+    在请求头中添加 `Authorization: Bearer your_api_key`
+    
+    ### 方式二：API密钥
     1. 在请求头中添加 `X-API-Key: your_api_key`
     2. 在查询参数中添加 `?api_key=your_api_key`
     3. 在请求体中添加 `"api_key": "your_api_key"`（仅适用于JSON请求）
@@ -23,6 +28,7 @@ servers:
     description: 生产环境服务器
 security:
   - ApiKeyAuth: []
+  - BearerAuth: []
 paths:
   /api/convert:
     post:
@@ -33,6 +39,7 @@ paths:
       operationId: convertContent
       security:
         - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -73,6 +80,7 @@ paths:
       operationId: convertContentWithUrl
       security:
         - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -107,6 +115,7 @@ paths:
       operationId: convertFile
       security:
         - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -167,6 +176,7 @@ paths:
       operationId: convertFileWithUrl
       security:
         - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -267,4 +277,8 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: API密钥用于认证和授权 
+      description: API密钥用于认证和授权（可选方式）
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer Token认证方式（推荐） 

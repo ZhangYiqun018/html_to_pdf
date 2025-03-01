@@ -33,7 +33,7 @@
 6. 在URL字段中输入你的OpenAPI文件URL，例如 `https://htmlpdf.zeabur.app/openapi.yaml`
 7. 点击"导入"
 8. 配置工具名称、描述等信息
-9. **重要**：在"认证"部分，选择"API密钥"，并输入你的API密钥
+9. **重要**：在"认证"部分，选择"Bearer Token"，并输入你的API密钥
 10. 点击"保存"完成集成
 
 ### 方法二：使用ChatGPT Plugin规范

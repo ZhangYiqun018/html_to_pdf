@@ -10,8 +10,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_in_prod
 
 // 创建API密钥验证中间件
 export const apiKeyAuth = (req, res, next) => {
+  // 从请求头获取Bearer Token
+  const bearerToken = req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
+    ? req.headers.authorization.substring(7)
+    : null;
+  
   // 从请求头、查询参数或请求体中获取API密钥
-  const apiKey = req.headers['x-api-key'] || req.query.api_key || (req.body && req.body.api_key);
+  const apiKey = bearerToken || req.headers['x-api-key'] || req.query.api_key || (req.body && req.body.api_key);
   
   // 如果在开发环境中且没有设置API_KEY_REQUIRED，则跳过验证
   if (process.env.NODE_ENV === 'development' && process.env.API_KEY_REQUIRED !== 'true') {
@@ -22,7 +27,7 @@ export const apiKeyAuth = (req, res, next) => {
   if (!apiKey) {
     return res.status(401).json({
       success: false,
-      error: '未提供API密钥'
+      error: '未提供认证凭据，请使用Bearer Token或API密钥'
     });
   }
   
@@ -34,14 +39,14 @@ export const apiKeyAuth = (req, res, next) => {
     if (!validApiKeys.includes(apiKey)) {
       return res.status(401).json({
         success: false,
-        error: 'API密钥无效'
+        error: '认证凭据无效'
       });
     }
     
     // API密钥有效，继续处理请求
     next();
   } catch (error) {
-    console.error('API密钥验证错误:', error);
+    console.error('认证错误:', error);
     return res.status(500).json({
       success: false,
       error: '服务器内部错误'
