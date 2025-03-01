@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML转PDF/PNG工具</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      background-color: #f8f8f8;
+      margin-right: 5px;
+    }
+    .tab.active {
+      background-color: white;
+      border-color: #ddd;
+      border-bottom-color: white;
+      margin-bottom: -1px;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea, select, input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 200px;
+      font-family: monospace;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      display: none;
+    }
+    .result a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #3498db;
+      text-decoration: none;
+    }
+    .result a:hover {
+      text-decoration: underline;
+    }
+    .loading {
+      text-align: center;
+      display: none;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid #3498db;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .error {
+      color: #e74c3c;
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .nav-links {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .nav-links a {
+      margin: 0 10px;
+      color: #3498db;
+      text-decoration: none;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>HTML转PDF/PNG工具</h1>
+    
+    <div class="nav-links">
+      <a href="/">HTML转换</a> | <a href="/svg">SVG转换</a>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="html-input">HTML文本输入</div>
+      <div class="tab" data-tab="file-upload">HTML文件上传</div>
+    </div>
+    
+    <div class="tab-content active" id="html-input">
+      <form id="html-form">
+        <div class="form-group">
+          <label for="html-content">HTML内容:</label>
+          <textarea id="html-content" name="html-content" placeholder="在此粘贴您的HTML代码..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="html-selector">CSS选择器 (用于裁剪):</label>
+          <input type="text" id="html-selector" name="selector" placeholder="例如: body, #main, .content" value="body">
+        </div>
+        
+        <div class="form-group">
+          <label for="html-format">输出格式:</label>
+          <select id="html-format" name="format">
+            <option value="pdf">PDF</option>
+            <option value="png">PNG</option>
+          </select>
+        </div>
+        
+        <button type="submit">转换</button>
+      </form>
+    </div>
+    
+    <div class="tab-content" id="file-upload">
+      <form id="file-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="html-file">HTML文件:</label>
+          <input type="file" id="html-file" name="htmlFile" accept=".html,.htm">
+        </div>
+        
+        <div class="form-group">
+          <label for="file-selector">CSS选择器 (用于裁剪):</label>
+          <input type="text" id="file-selector" name="selector" placeholder="例如: body, #main, .content" value="body">
+        </div>
+        
+        <div class="form-group">
+          <label for="file-format">输出格式:</label>
+          <select id="file-format" name="format">
+            <option value="pdf">PDF</option>
+            <option value="png">PNG</option>
+          </select>
+        </div>
+        
+        <button type="submit">转换</button>
+      </form>
+    </div>
+    
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>正在处理，请稍候...</p>
+    </div>
+    
+    <div class="error" id="error-message"></div>
+    
+    <div class="result" id="result">
+      <h3>转换成功!</h3>
+      <p>您可以点击下方链接查看或下载转换后的文件:</p>
+      <a id="result-link" href="#" target="_blank">查看/下载文件</a>
+    </div>
+  </div>
+
+  <script>
+    // 标签切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+    
+    // HTML文本表单提交
+    document.getElementById('html-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const htmlContent = document.getElementById('html-content').value;
+      const selector = document.getElementById('html-selector').value;
+      const format = document.getElementById('html-format').value;
+      
+      if (!htmlContent.trim()) {
+        showError('请输入HTML内容');
+        return;
+      }
+      
+      showLoading();
+      
+      try {
+        const response = await fetch(`/convert-html?format=${format}&selector=${encodeURIComponent(selector)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: htmlContent
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showResult(result.filePath);
+        } else {
+          showError(result.error || '转换失败');
+        }
+      } catch (error) {
+        showError('请求失败: ' + error.message);
+      } finally {
+        hideLoading();
+      }
+    });
+    
+    // 文件上传表单提交
+    document.getElementById('file-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('html-file');
+      const selector = document.getElementById('file-selector').value;
+      const format = document.getElementById('file-format').value;
+      
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showError('请选择HTML文件');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('htmlFile', fileInput.files[0]);
+      formData.append('selector', selector);
+      formData.append('format', format);
+      
+      showLoading();
+      
+      try {
+        const response = await fetch('/convert-file', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showResult(result.filePath);
+        } else {
+          showError(result.error || '转换失败');
+        }
+      } catch (error) {
+        showError('请求失败: ' + error.message);
+      } finally {
+        hideLoading();
+      }
+    });
+    
+    // 辅助函数
+    function showLoading() {
+      document.querySelector('.loading').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('error-message').style.display = 'none';
+    }
+    
+    function hideLoading() {
+      document.querySelector('.loading').style.display = 'none';
+    }
+    
+    function showResult(filePath) {
+      const resultElement = document.getElementById('result');
+      const linkElement = document.getElementById('result-link');
+      
+      linkElement.href = '/' + filePath;
+      resultElement.style.display = 'block';
+    }
+    
+    function showError(message) {
+      const errorElement = document.getElementById('error-message');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+  </script>
+</body>
+</html> 

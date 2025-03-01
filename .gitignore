@@ -1,0 +1,32 @@
+# 依赖目录
+node_modules/
+
+# 环境变量
+.env
+
+# 日志
+logs
+*.log
+npm-debug.log*
+
+# 运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 目录用于输出文件
+output/
+
+# 目录用于上传文件
+uploads/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE和编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo 

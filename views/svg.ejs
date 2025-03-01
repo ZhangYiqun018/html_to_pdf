@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG转PNG/PDF工具</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      background-color: #f8f8f8;
+      margin-right: 5px;
+    }
+    .tab.active {
+      background-color: white;
+      border-color: #ddd;
+      border-bottom-color: white;
+      margin-bottom: -1px;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea, select, input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 200px;
+      font-family: monospace;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      display: none;
+    }
+    .result a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #3498db;
+      text-decoration: none;
+    }
+    .result a:hover {
+      text-decoration: underline;
+    }
+    .loading {
+      text-align: center;
+      display: none;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid #3498db;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .error {
+      color: #e74c3c;
+      margin-top: 10px;
+      display: none;
+    }
+    .preview {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px dashed #ddd;
+      border-radius: 4px;
+      background-color: white;
+      display: none;
+      text-align: center;
+    }
+    .preview svg {
+      max-width: 100%;
+      max-height: 300px;
+    }
+    .nav-links {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .nav-links a {
+      margin: 0 10px;
+      color: #3498db;
+      text-decoration: none;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SVG转PNG/PDF工具</h1>
+    
+    <div class="nav-links">
+      <a href="/">HTML转换</a> | <a href="/svg">SVG转换</a>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="svg-input">SVG文本输入</div>
+      <div class="tab" data-tab="svg-upload">SVG文件上传</div>
+    </div>
+    
+    <div class="tab-content active" id="svg-input">
+      <form id="svg-form">
+        <div class="form-group">
+          <label for="svg-content">SVG内容:</label>
+          <textarea id="svg-content" name="svg-content" placeholder="在此粘贴您的SVG代码..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="svg-format">输出格式:</label>
+          <select id="svg-format" name="format">
+            <option value="png">PNG</option>
+            <option value="pdf">PDF</option>
+          </select>
+        </div>
+        
+        <button type="button" id="preview-button">预览SVG</button>
+        <button type="submit">转换</button>
+      </form>
+      
+      <div class="preview" id="svg-preview">
+        <h3>SVG预览</h3>
+        <div id="preview-container"></div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="svg-upload">
+      <form id="svg-file-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="svg-file">SVG文件:</label>
+          <input type="file" id="svg-file" name="svgFile" accept=".svg">
+        </div>
+        
+        <div class="form-group">
+          <label for="file-format">输出格式:</label>
+          <select id="file-format" name="format">
+            <option value="png">PNG</option>
+            <option value="pdf">PDF</option>
+          </select>
+        </div>
+        
+        <button type="button" id="file-preview-button">预览SVG</button>
+        <button type="submit">转换</button>
+      </form>
+      
+      <div class="preview" id="file-preview">
+        <h3>SVG预览</h3>
+        <div id="file-preview-container"></div>
+      </div>
+    </div>
+    
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>正在处理，请稍候...</p>
+    </div>
+    
+    <div class="error" id="error-message"></div>
+    
+    <div class="result" id="result">
+      <h3>转换成功!</h3>
+      <p>您可以点击下方链接查看或下载转换后的文件:</p>
+      <a id="result-link" href="#" target="_blank">查看/下载文件</a>
+    </div>
+  </div>
+
+  <script>
+    // 标签切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+    
+    // SVG文本预览
+    document.getElementById('preview-button').addEventListener('click', () => {
+      const svgContent = document.getElementById('svg-content').value;
+      
+      if (!svgContent.trim()) {
+        showError('请输入SVG内容');
+        return;
+      }
+      
+      try {
+        const previewContainer = document.getElementById('preview-container');
+        previewContainer.innerHTML = svgContent;
+        document.getElementById('svg-preview').style.display = 'block';
+      } catch (error) {
+        showError('SVG预览失败: ' + error.message);
+      }
+    });
+    
+    // SVG文件预览
+    document.getElementById('file-preview-button').addEventListener('click', () => {
+      const fileInput = document.getElementById('svg-file');
+      
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showError('请选择SVG文件');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const svgContent = e.target.result;
+          const previewContainer = document.getElementById('file-preview-container');
+          previewContainer.innerHTML = svgContent;
+          document.getElementById('file-preview').style.display = 'block';
+        } catch (error) {
+          showError('SVG预览失败: ' + error.message);
+        }
+      };
+      
+      reader.onerror = () => {
+        showError('文件读取失败');
+      };
+      
+      reader.readAsText(file);
+    });
+    
+    // SVG文本表单提交
+    document.getElementById('svg-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const svgContent = document.getElementById('svg-content').value;
+      const format = document.getElementById('svg-format').value;
+      
+      if (!svgContent.trim()) {
+        showError('请输入SVG内容');
+        return;
+      }
+      
+      showLoading();
+      
+      try {
+        const response = await fetch(`/convert-svg?format=${format}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: svgContent
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showResult(result.filePath);
+        } else {
+          showError(result.error || '转换失败');
+        }
+      } catch (error) {
+        showError('请求失败: ' + error.message);
+      } finally {
+        hideLoading();
+      }
+    });
+    
+    // SVG文件上传表单提交
+    document.getElementById('svg-file-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('svg-file');
+      const format = document.getElementById('file-format').value;
+      
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showError('请选择SVG文件');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('svgFile', fileInput.files[0]);
+      formData.append('format', format);
+      
+      showLoading();
+      
+      try {
+        const response = await fetch('/convert-svg-file', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showResult(result.filePath);
+        } else {
+          showError(result.error || '转换失败');
+        }
+      } catch (error) {
+        showError('请求失败: ' + error.message);
+      } finally {
+        hideLoading();
+      }
+    });
+    
+    // 辅助函数
+    function showLoading() {
+      document.querySelector('.loading').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('error-message').style.display = 'none';
+    }
+    
+    function hideLoading() {
+      document.querySelector('.loading').style.display = 'none';
+    }
+    
+    function showResult(filePath) {
+      const resultElement = document.getElementById('result');
+      const linkElement = document.getElementById('result-link');
+      
+      linkElement.href = '/' + filePath;
+      resultElement.style.display = 'block';
+    }
+    
+    function showError(message) {
+      const errorElement = document.getElementById('error-message');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+  </script>
+</body>
+</html> 
