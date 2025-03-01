@@ -241,21 +241,37 @@
       showLoading();
       
       try {
-        const response = await fetch(`/convert-html?format=${format}&selector=${encodeURIComponent(selector)}`, {
+        const response = await fetch('/api/convert', {
           method: 'POST',
           headers: {
-            'Content-Type': 'text/plain'
+            'Content-Type': 'application/json'
           },
-          body: htmlContent
+          body: JSON.stringify({
+            content: htmlContent,
+            type: 'html',
+            format: format,
+            selector: selector
+          })
         });
         
-        const result = await response.json();
-        
-        if (result.success) {
-          showResult(result.filePath);
-        } else {
-          showError(result.error || '转换失败');
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorMessage;
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || '转换失败';
+          } catch (e) {
+            errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+          }
+          throw new Error(errorMessage);
         }
+        
+        // 获取blob数据
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        // 显示结果
+        showBlobResult(url, format);
       } catch (error) {
         showError('请求失败: ' + error.message);
       } finally {
@@ -277,25 +293,37 @@
       }
       
       const formData = new FormData();
-      formData.append('htmlFile', fileInput.files[0]);
-      formData.append('selector', selector);
+      formData.append('file', fileInput.files[0]);
+      formData.append('type', 'html');
       formData.append('format', format);
+      formData.append('selector', selector);
       
       showLoading();
       
       try {
-        const response = await fetch('/convert-file', {
+        const response = await fetch('/api/convert/file', {
           method: 'POST',
           body: formData
         });
         
-        const result = await response.json();
-        
-        if (result.success) {
-          showResult(result.filePath);
-        } else {
-          showError(result.error || '转换失败');
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorMessage;
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || '转换失败';
+          } catch (e) {
+            errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+          }
+          throw new Error(errorMessage);
         }
+        
+        // 获取blob数据
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        // 显示结果
+        showBlobResult(url, format);
       } catch (error) {
         showError('请求失败: ' + error.message);
       } finally {
@@ -320,6 +348,43 @@
       
       linkElement.href = '/' + filePath;
       resultElement.style.display = 'block';
+    }
+    
+    function showBlobResult(url, format) {
+      const resultElement = document.getElementById('result');
+      const linkElement = document.getElementById('result-link');
+      
+      linkElement.href = url;
+      linkElement.download = `output.${format}`;
+      resultElement.style.display = 'block';
+      
+      // 如果是PNG格式，添加预览图
+      if (format === 'png') {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'preview';
+        previewDiv.style.marginTop = '15px';
+        
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = '转换结果';
+        img.style.maxWidth = '100%';
+        
+        previewDiv.appendChild(img);
+        
+        // 移除旧的预览（如果有）
+        const oldPreview = resultElement.querySelector('.preview');
+        if (oldPreview) {
+          resultElement.removeChild(oldPreview);
+        }
+        
+        resultElement.appendChild(previewDiv);
+      } else {
+        // 移除旧的预览（如果有）
+        const oldPreview = resultElement.querySelector('.preview');
+        if (oldPreview) {
+          resultElement.removeChild(oldPreview);
+        }
+      }
     }
     
     function showError(message) {

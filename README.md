@@ -152,47 +152,6 @@ POST /api/convert/file/url
 }
 ```
 
-### 简化API（无需认证）
-
-#### 将HTML内容转换为PDF/PNG
-
-```
-POST /convert-html
-```
-
-**请求体**: 直接发送HTML内容（Content-Type: text/plain）
-
-**查询参数**:
-- `format`: "pdf"（默认）或 "png"
-- `selector`: CSS选择器，默认为 "body"
-
-**响应**:
-```json
-{
-  "success": true,
-  "filePath": "output/output-1234567890.pdf"
-}
-```
-
-#### 将SVG内容转换为PDF/PNG
-
-```
-POST /convert-svg
-```
-
-**请求体**: 直接发送SVG内容（Content-Type: text/plain）
-
-**查询参数**:
-- `format`: "png"（默认）或 "pdf"
-
-**响应**:
-```json
-{
-  "success": true,
-  "filePath": "output/svg-1234567890.png"
-}
-```
-
 ## 🔧 环境变量
 
 | 变量名 | 描述 | 默认值 |

@@ -265,31 +265,47 @@
             const htmlContent = document.getElementById('html-content').value;
             const format = document.getElementById('html-format').value;
             const selector = document.getElementById('html-selector').value;
+            const apiKey = document.getElementById('api-key').value;
             const resultDiv = document.getElementById('html-result');
             
             resultDiv.innerHTML = '<p>正在转换...</p>';
             
             try {
-                const response = await fetch(`/convert-html?format=${format}&selector=${selector}`, {
+                const response = await fetch('/api/convert', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
                     },
-                    body: htmlContent
+                    body: JSON.stringify({
+                        content: htmlContent,
+                        type: 'html',
+                        format: format,
+                        selector: selector
+                    })
                 });
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultDiv.innerHTML = `
-                        <p class="success">转换成功!</p>
-                        <p>文件路径: ${result.filePath}</p>
-                        <p><a href="/${result.filePath}" target="_blank">查看文件</a></p>
-                        ${format === 'png' ? `<img src="/${result.filePath}" alt="转换结果">` : ''}
-                    `;
-                } else {
-                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || '转换失败';
+                    } catch (e) {
+                        errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+                    }
+                    throw new Error(errorMessage);
                 }
+                
+                // 获取blob数据
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p class="success">转换成功!</p>
+                    <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                    ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
             }
@@ -318,19 +334,27 @@
                     })
                 });
                 
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    
-                    resultDiv.innerHTML = `
-                        <p class="success">转换成功!</p>
-                        <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
-                        ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
-                    `;
-                } else {
-                    const error = await response.json();
-                    resultDiv.innerHTML = `<p class="error">转换失败: ${error.error}</p>`;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || '转换失败';
+                    } catch (e) {
+                        errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+                    }
+                    throw new Error(errorMessage);
                 }
+                
+                // 获取blob数据
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p class="success">转换成功!</p>
+                    <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                    ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
             }
@@ -382,31 +406,46 @@
         document.getElementById('convert-svg-simple').addEventListener('click', async () => {
             const svgContent = document.getElementById('svg-content').value;
             const format = document.getElementById('svg-format').value;
+            const apiKey = document.getElementById('api-key').value;
             const resultDiv = document.getElementById('svg-result');
             
             resultDiv.innerHTML = '<p>正在转换...</p>';
             
             try {
-                const response = await fetch(`/convert-svg?format=${format}`, {
+                const response = await fetch('/api/convert', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
                     },
-                    body: svgContent
+                    body: JSON.stringify({
+                        content: svgContent,
+                        type: 'svg',
+                        format: format
+                    })
                 });
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultDiv.innerHTML = `
-                        <p class="success">转换成功!</p>
-                        <p>文件路径: ${result.filePath}</p>
-                        <p><a href="/${result.filePath}" target="_blank">查看文件</a></p>
-                        ${format === 'png' ? `<img src="/${result.filePath}" alt="转换结果">` : ''}
-                    `;
-                } else {
-                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || '转换失败';
+                    } catch (e) {
+                        errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+                    }
+                    throw new Error(errorMessage);
                 }
+                
+                // 获取blob数据
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p class="success">转换成功!</p>
+                    <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                    ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
             }
@@ -433,19 +472,27 @@
                     })
                 });
                 
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    
-                    resultDiv.innerHTML = `
-                        <p class="success">转换成功!</p>
-                        <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
-                        ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
-                    `;
-                } else {
-                    const error = await response.json();
-                    resultDiv.innerHTML = `<p class="error">转换失败: ${error.error}</p>`;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || '转换失败';
+                    } catch (e) {
+                        errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+                    }
+                    throw new Error(errorMessage);
                 }
+                
+                // 获取blob数据
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p class="success">转换成功!</p>
+                    <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                    ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
             }
@@ -497,6 +544,7 @@
             const fileType = document.getElementById('file-type').value;
             const format = document.getElementById('file-format').value;
             const selector = document.getElementById('file-selector').value;
+            const apiKey = document.getElementById('api-key').value;
             const resultDiv = document.getElementById('file-result');
             
             if (!fileInput.files || fileInput.files.length === 0) {
@@ -507,30 +555,44 @@
             resultDiv.innerHTML = '<p>正在转换...</p>';
             
             const formData = new FormData();
-            formData.append(fileType === 'html' ? 'htmlFile' : 'svgFile', fileInput.files[0]);
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', fileType);
             formData.append('format', format);
             if (fileType === 'html') {
                 formData.append('selector', selector);
             }
             
             try {
-                const response = await fetch(fileType === 'html' ? '/convert-file' : '/convert-svg-file', {
+                const response = await fetch('/api/convert/file', {
                     method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    },
                     body: formData
                 });
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultDiv.innerHTML = `
-                        <p class="success">转换成功!</p>
-                        <p>文件路径: ${result.filePath}</p>
-                        <p><a href="/${result.filePath}" target="_blank">查看文件</a></p>
-                        ${format === 'png' ? `<img src="/${result.filePath}" alt="转换结果">` : ''}
-                    `;
-                } else {
-                    resultDiv.innerHTML = `<p class="error">转换失败: ${result.error}</p>`;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '转换失败');
                 }
+                
+                // 获取blob数据
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                // 显示结果
+                resultDiv.innerHTML = `
+                    <p class="success">转换成功!</p>
+                    <div class="preview">
+                        ${format === 'pdf' 
+                            ? `<embed src="${url}" type="application/pdf" width="100%" height="400px" />`
+                            : `<img src="${url}" style="max-width:100%" />`
+                        }
+                    </div>
+                    <div class="download">
+                        <a href="${url}" download="output.${format}" class="download-btn">下载${format.toUpperCase()}</a>
+                    </div>
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
             }
@@ -566,19 +628,27 @@
                     body: formData
                 });
                 
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    
-                    resultDiv.innerHTML = `
-                        <p class="success">转换成功!</p>
-                        <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
-                        ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
-                    `;
-                } else {
-                    const error = await response.json();
-                    resultDiv.innerHTML = `<p class="error">转换失败: ${error.error}</p>`;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || '转换失败';
+                    } catch (e) {
+                        errorMessage = `转换失败: ${errorText.substring(0, 100)}...`;
+                    }
+                    throw new Error(errorMessage);
                 }
+                
+                // 获取blob数据
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p class="success">转换成功!</p>
+                    <p><a href="${url}" download="output.${format}" target="_blank">下载文件</a></p>
+                    ${format === 'png' ? `<img src="${url}" alt="转换结果">` : ''}
+                `;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">请求错误: ${error.message}</p>`;
             }

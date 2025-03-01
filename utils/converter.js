@@ -2,11 +2,7 @@ import puppeteer from 'puppeteer';
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// 使用 createRequire 来导入 CommonJS 模块
-const require = createRequire(import.meta.url);
-const htmlPdf = require('html-pdf');
-const phantomjs = require('phantomjs-prebuilt');
+import fs from 'fs/promises';
 
 // 设置__dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -66,141 +62,6 @@ export function preprocessContent(content, type) {
 }
 
 /**
- * 使用 html-pdf 库转换 HTML 到 PDF/PNG
- * @param {string} htmlContent - HTML内容
- * @param {string} format - 输出格式 (pdf 或 png)
- * @param {string} selector - CSS选择器
- * @param {string} outputPath - 输出文件路径
- * @returns {Promise<string>} 输出文件路径
- */
-export function convertWithHtmlPdf(htmlContent, format, selector, outputPath) {
-  return new Promise((resolve, reject) => {
-    // 添加字体支持的CSS，但不影响原始布局
-    const fontStyles = `
-      @font-face {
-        font-family: 'WQY Zen Hei';
-        src: local('WenQuanYi Zen Hei');
-      }
-      @font-face {
-        font-family: 'WQY Micro Hei';
-        src: local('WenQuanYi Micro Hei');
-      }
-      @font-face {
-        font-family: 'Noto Sans CJK SC';
-        src: local('Noto Sans CJK SC');
-      }
-      /* 只添加字体，不修改其他样式 */
-      .chinese-text-support {
-        font-family: 'Noto Sans CJK SC', 'WQY Zen Hei', 'WQY Micro Hei', Arial, sans-serif;
-      }
-    `;
-    
-    // 保存原始HTML，以便在需要时恢复
-    const originalHtmlContent = htmlContent;
-    
-    // 提取原始内容中的宽度和高度
-    let originalWidth, originalHeight;
-    
-    // 尝试从HTML内容中提取宽度和高度
-    if (htmlContent.includes('<html') && !selector) {
-      // 如果是完整的HTML文档，尝试保留其原始尺寸
-      const widthMatch = htmlContent.match(/width\s*[:=]\s*["']?([^"'\s;]+)/i);
-      const heightMatch = htmlContent.match(/height\s*[:=]\s*["']?([^"'\s;]+)/i);
-      
-      if (widthMatch && widthMatch[1]) {
-        originalWidth = widthMatch[1];
-        // 确保有单位
-        if (!isNaN(originalWidth) && !originalWidth.match(/[a-z%]/i)) {
-          originalWidth = originalWidth + 'px';
-        }
-      }
-      
-      if (heightMatch && heightMatch[1]) {
-        originalHeight = heightMatch[1];
-        // 确保有单位
-        if (!isNaN(originalHeight) && !originalHeight.match(/[a-z%]/i)) {
-          originalHeight = originalHeight + 'px';
-        }
-      }
-    }
-    
-    // 最小化对原始HTML的修改
-    let processedHtml = htmlContent;
-    
-    // 只在必要时添加HTML结构
-    if (!processedHtml.includes('<html')) {
-      processedHtml = `<!DOCTYPE html><html><head><style>${fontStyles}</style></head><body class="chinese-text-support">${processedHtml}</body></html>`;
-    } else if (!processedHtml.includes('<head>')) {
-      processedHtml = processedHtml.replace('<html>', `<html><head><style>${fontStyles}</style></head>`);
-    } else if (!processedHtml.includes(fontStyles)) {
-      // 只添加字体样式，不修改其他内容
-      processedHtml = processedHtml.replace('</head>', `<style>${fontStyles}</style></head>`);
-    }
-    
-    // 设置转换选项，尽量保持原始布局
-    const options = {
-      // 使用原始尺寸或默认值
-      width: originalWidth || '100%',
-      height: originalHeight || '100%',
-      // 保持原始比例，不进行缩放
-      zoomFactor: '1.0',
-      // 设置边距为0，避免影响原始布局
-      border: {
-        top: '0',
-        right: '0',
-        bottom: '0',
-        left: '0'
-      },
-      // 禁用页眉页脚
-      header: {
-        height: '0'
-      },
-      footer: {
-        height: '0'
-      },
-      // 保持原始布局
-      base: 'file:///' + process.cwd() + '/',
-      type: format === 'pdf' ? 'pdf' : 'png',
-      renderDelay: 2000, // 增加延迟以确保字体加载
-      quality: '100',
-      phantomPath: phantomjs.path,
-      // 添加更多的PhantomJS选项以提高渲染质量
-      phantomArgs: [
-        '--web-security=false', 
-        '--local-to-remote-url-access=true', 
-        '--ignore-ssl-errors=true',
-        '--debug=true'
-      ]
-    };
-    
-    // 如果指定了选择器，尝试使用更保守的方法来选择内容
-    if (selector && selector !== 'body') {
-      console.log(`使用选择器: ${selector}`);
-      // 使用PhantomJS的clipRect功能而不是修改HTML
-      options.paperSize = {
-        width: originalWidth || '100%',
-        height: originalHeight || '100%',
-        margin: '0px'
-      };
-      options.captureSelector = selector;
-    }
-    
-    console.log('使用html-pdf转换html到' + format);
-    console.log('转换选项:', JSON.stringify(options, null, 2));
-    
-    htmlPdf.create(processedHtml, options).toFile(outputPath, (err, res) => {
-      if (err) {
-        console.error('html-pdf error:', err);
-        reject(err);
-      } else {
-        console.log('html-pdf转换成功:', res);
-        resolve(outputPath);
-      }
-    });
-  });
-}
-
-/**
  * 使用 Puppeteer 转换 HTML/SVG 到 PDF/PNG
  * @param {string} content - HTML或SVG内容
  * @param {string} format - 输出格式 (pdf 或 png)
@@ -210,11 +71,20 @@ export function convertWithHtmlPdf(htmlContent, format, selector, outputPath) {
 export async function convertWithPuppeteer(content, format, options = {}) {
   const {
     type = 'html',
+    selector = null,
     outputPath,
     scale = 2
   } = options;
 
   console.log(`使用Puppeteer转换${type}到${format}`);
+  
+  // 预处理内容
+  content = preprocessContent(content, type);
+  
+  // 确保HTML内容是完整的HTML文档
+  if (type === 'html' && !content.includes('<html')) {
+    content = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${content}</body></html>`;
+  }
   
   // 启动浏览器，支持自定义Chrome路径
   const launchOptions = {
@@ -270,46 +140,18 @@ export async function convertWithPuppeteer(content, format, options = {}) {
       document.head.appendChild(style);
     });
     
-    // 根据内容类型处理
+    // 根据内容类型设置页面内容
     if (type === 'html') {
-      // 为HTML内容添加最小化样式，保留原始布局
-      const htmlWithStyle = content.includes('<html') 
-        ? content.replace('</head>', `
-            <style>
-              /* 保持固定宽度，防止响应式变化 */
-              .container {
-                width: ${fixedWidth}px !important;
-                max-width: ${fixedWidth}px !important;
-              }
-              /* 禁用媒体查询，确保布局一致 */
-              @media (max-width: 768px) {
-                .content, .characters {
-                  flex-direction: row !important;
-                }
-                .scene, .key-points {
-                  min-width: initial !important;
-                }
-              }
-            </style>
-          </head>`)
-        : `<!DOCTYPE html><html><head>
-            <meta charset="UTF-8">
-            <style>
-              body { margin: 0; padding: 0; width: ${fixedWidth}px; }
-            </style>
-          </head><body>${content}</body></html>`;
-      
-      await page.setContent(htmlWithStyle, { waitUntil: 'networkidle0' });
-      
+      await page.setContent(content, { waitUntil: 'networkidle0' });
     } else if (type === 'svg') {
-      // 对于SVG，保留原始尺寸
+      // 将SVG包装在HTML中
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
           <style>
-            body, html { margin: 0; padding: 0; }
+            body { margin: 0; padding: 0; }
             svg { display: block; }
           </style>
         </head>
@@ -319,68 +161,124 @@ export async function convertWithPuppeteer(content, format, options = {}) {
       await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     }
     
-    // 等待渲染完成
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 增加等待时间确保渲染完成
+    // 等待一段时间确保所有内容都已加载
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // 获取实际内容尺寸
-    const dimensions = await page.evaluate(() => {
-      // 获取文档或主要内容元素的尺寸
-      const body = document.body;
-      
-      // 对于HTML，优先获取.container或.infographic元素的尺寸
-      const container = document.querySelector('.container') || 
-                        document.querySelector('.infographic') || 
-                        document.querySelector('div') || 
-                        body;
-      
-      const rect = container.getBoundingClientRect();
-      
-      // 获取实际内容尺寸
-      return {
-        width: Math.ceil(rect.width),
-        height: Math.ceil(rect.height)
-      };
-    });
+    // 获取内容的实际尺寸
+    let dimensions;
     
-    console.log(`内容实际尺寸: width=${dimensions.width}, height=${dimensions.height}`);
-    
-    // 根据格式输出
-    if (format === 'pdf') {
-      await page.pdf({
-        path: outputPath,
-        width: dimensions.width + 'px',
-        height: dimensions.height + 'px',
-        printBackground: true,
-        margin: {
-          top: '0px',
-          right: '0px',
-          bottom: '0px',
-          left: '0px'
-        }
-      });
+    if (selector) {
+      // 如果提供了选择器，只获取选择器指定元素的尺寸
+      dimensions = await page.evaluate((sel) => {
+        const element = document.querySelector(sel);
+        if (!element) return null;
+        
+        const { width, height } = element.getBoundingClientRect();
+        return { width, height };
+      }, selector);
+      
+      if (!dimensions) {
+        throw new Error(`找不到选择器 "${selector}" 指定的元素`);
+      }
     } else {
-      // 调整视口以适应实际内容
-      await page.setViewport({
-        width: dimensions.width,
-        height: dimensions.height,
-        deviceScaleFactor: scale
-      });
-      
-      // 截图
-      await page.screenshot({
-        path: outputPath,
-        type: 'png',
-        omitBackground: false,
-        clip: {
-          x: 0,
-          y: 0,
-          width: dimensions.width,
-          height: dimensions.height
+      // 否则获取整个内容的尺寸
+      dimensions = await page.evaluate(() => {
+        // 对于SVG，获取SVG元素的尺寸
+        const svgElement = document.querySelector('svg');
+        if (svgElement) {
+          const { width, height } = svgElement.getBoundingClientRect();
+          return { width, height };
         }
+        
+        // 对于HTML，获取body的尺寸
+        const body = document.body;
+        const html = document.documentElement;
+        
+        const width = Math.max(
+          body.scrollWidth, body.offsetWidth,
+          html.clientWidth, html.scrollWidth, html.offsetWidth
+        );
+        
+        const height = Math.max(
+          body.scrollHeight, body.offsetHeight,
+          html.clientHeight, html.scrollHeight, html.offsetHeight
+        );
+        
+        return { width, height };
       });
     }
     
-    console.log('Puppeteer转换成功:', outputPath);
+    console.log(`内容实际尺寸: width=${dimensions.width}, height=${dimensions.height}`);
+    
+    // 调整页面视口以匹配内容尺寸
+    await page.setViewport({
+      width: Math.ceil(dimensions.width),
+      height: Math.ceil(dimensions.height),
+      deviceScaleFactor: scale
+    });
+    
+    // 根据格式生成输出
+    if (format === 'pdf') {
+      const pdfOptions = {
+        printBackground: true,
+        format: 'A4',
+        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+        preferCSSPageSize: true
+      };
+      
+      // 如果提供了选择器，只截取选择器指定的元素
+      if (selector) {
+        const clip = await page.evaluate((sel) => {
+          const element = document.querySelector(sel);
+          if (!element) return null;
+          
+          const { x, y, width, height } = element.getBoundingClientRect();
+          return { x, y, width, height };
+        }, selector);
+        
+        if (clip) {
+          pdfOptions.width = clip.width;
+          pdfOptions.height = clip.height;
+        }
+      } else {
+        pdfOptions.width = dimensions.width;
+        pdfOptions.height = dimensions.height;
+      }
+      
+      const pdfBuffer = await page.pdf(pdfOptions);
+      await fs.writeFile(outputPath, pdfBuffer);
+    } else {
+      // PNG格式
+      const screenshotOptions = {
+        type: 'png',
+        omitBackground: false,
+        path: outputPath
+      };
+      
+      // 如果提供了选择器，只截取选择器指定的元素
+      if (selector) {
+        const clip = await page.evaluate((sel) => {
+          const element = document.querySelector(sel);
+          if (!element) return null;
+          
+          const { x, y, width, height } = element.getBoundingClientRect();
+          return { x, y, width, height };
+        }, selector);
+        
+        if (clip) {
+          screenshotOptions.clip = {
+            x: clip.x,
+            y: clip.y,
+            width: clip.width,
+            height: clip.height
+          };
+        }
+      }
+      
+      await page.screenshot(screenshotOptions);
+    }
+    
+    console.log(`Puppeteer转换成功: ${outputPath}`);
     return outputPath;
   } catch (error) {
     console.error('Puppeteer转换错误:', error);
@@ -391,65 +289,65 @@ export async function convertWithPuppeteer(content, format, options = {}) {
 }
 
 /**
- * HTML转换函数
+ * 转换HTML到PDF或PNG
  * @param {string} htmlContent - HTML内容
  * @param {string} format - 输出格式 (pdf 或 png)
- * @param {string} selector - CSS选择器
+ * @param {string} selector - CSS选择器，用于选择特定元素
+ * @param {string} outputPath - 输出文件路径
  * @returns {Promise<string>} 输出文件路径
  */
-export async function convertHtml(htmlContent, format, selector, outputPath) {
+export async function convertHtml(htmlContent, format = 'pdf', selector = null, outputPath = null) {
   try {
-    // 预处理HTML内容，移除可能的代码块标记
-    htmlContent = preprocessContent(htmlContent, 'html');
-    
-    // 确保是完整的HTML文档
-    if (!htmlContent.includes('<html')) {
-      htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${htmlContent}</body></html>`;
+    // 验证参数
+    if (!htmlContent) {
+      throw new Error('HTML内容不能为空');
     }
     
-    // 使用Puppeteer转换
-    await convertWithPuppeteer(htmlContent, format, {
-      type: 'html',
-      outputPath
-    });
+    if (!['pdf', 'png'].includes(format)) {
+      throw new Error('输出格式必须是pdf或png');
+    }
     
-    return outputPath;
+    // 使用Puppeteer进行转换
+    return await convertWithPuppeteer(htmlContent, format, {
+      type: 'html',
+      selector: selector,
+      outputPath: outputPath
+    });
   } catch (error) {
-    console.error('HTML conversion error:', error);
+    console.error('HTML转换错误:', error);
     throw error;
   }
 }
 
 /**
- * SVG转换函数
+ * 转换SVG到PDF或PNG
  * @param {string} svgContent - SVG内容
  * @param {string} format - 输出格式 (pdf 或 png)
+ * @param {string} outputPath - 输出文件路径
  * @returns {Promise<string>} 输出文件路径
  */
-export async function convertSvg(svgContent, format, outputPath) {
+export async function convertSvg(svgContent, format = 'png', outputPath = null) {
   try {
-    // 预处理SVG内容，移除可能的代码块标记
-    svgContent = preprocessContent(svgContent, 'svg');
+    // 验证参数
+    if (!svgContent) {
+      throw new Error('SVG内容不能为空');
+    }
     
-    // 确保SVG内容有正确的SVG标签
     if (!svgContent.includes('<svg')) {
       throw new Error('Invalid SVG content');
     }
     
-    // 确保SVG有命名空间
-    if (!svgContent.includes('xmlns=')) {
-      svgContent = svgContent.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    if (!['pdf', 'png'].includes(format)) {
+      throw new Error('输出格式必须是pdf或png');
     }
     
-    // 使用Puppeteer转换SVG
-    await convertWithPuppeteer(svgContent, format, {
+    // 使用Puppeteer进行转换
+    return await convertWithPuppeteer(svgContent, format, {
       type: 'svg',
-      outputPath
+      outputPath: outputPath
     });
-    
-    return outputPath;
   } catch (error) {
-    console.error('SVG conversion error:', error);
+    console.error('SVG转换错误:', error);
     throw error;
   }
 } 
