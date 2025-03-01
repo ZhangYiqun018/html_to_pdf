@@ -1,10 +1,12 @@
 {
   "name": "html-to-pdf-png",
   "version": "1.0.0",
-  "description": "A tool to convert HTML to cropped PDF/PNG",
+  "description": "A tool to convert HTML/SVG to PDF/PNG with proper sizing",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js",
+    "prod": "NODE_ENV=production node index.js"
   },
   "dependencies": {
     "axios": "^1.8.1",
@@ -21,5 +23,22 @@
     "phantomjs-prebuilt": "^2.1.16",
     "puppeteer": "^22.15.0"
   },
-  "type": "module"
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/html-to-pdf-png.git"
+  },
+  "keywords": [
+    "html",
+    "svg",
+    "pdf",
+    "png",
+    "converter",
+    "puppeteer"
+  ]
 }

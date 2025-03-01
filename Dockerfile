@@ -1,17 +1,17 @@
-FROM node:20
+FROM node:18-slim
 
-# 创建应用目录
-WORKDIR /usr/src/app
-
-# 安装html-pdf所需的依赖和中文字体支持
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libfontconfig1 \
-    fonts-noto-cjk \
-    fonts-noto-color-emoji \
-    fonts-wqy-zenhei \
-    fonts-wqy-microhei \
+# 安装Puppeteer所需的依赖
+RUN apt-get update \
+    && apt-get install -y wget gnupg \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+      --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
+
+# 设置工作目录
+WORKDIR /app
 
 # 复制package.json和package-lock.json
 COPY package*.json ./
@@ -19,11 +19,17 @@ COPY package*.json ./
 # 安装依赖
 RUN npm install
 
-# 复制应用代码
+# 复制所有文件
 COPY . .
 
 # 创建必要的目录
-RUN mkdir -p uploads output
+RUN mkdir -p output uploads .well-known
+
+# 设置环境变量
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV API_KEY_REQUIRED=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # 暴露端口
 EXPOSE 3000

@@ -1,7 +1,13 @@
 node_modules
 npm-debug.log
-output
-uploads
+output/*
+uploads/*
+.git
+.gitignore
+.env
+.env.*
+*.md
+!README.md
 .env
 .git
 .gitignore

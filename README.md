@@ -39,6 +39,33 @@ node index.js
 
 默认情况下，服务将在 http://localhost:3000 上运行。
 
+### 使用Docker运行
+
+```bash
+# 构建Docker镜像
+docker build -t html-to-pdf .
+
+# 运行Docker容器
+docker run -p 3000:3000 -e API_KEY_REQUIRED=false html-to-pdf
+```
+
+### 部署到Zeabur
+
+本项目可以轻松部署到[Zeabur](https://zeabur.com)云平台：
+
+1. 在Zeabur上创建一个新项目
+2. 连接您的GitHub仓库
+3. 选择本仓库并部署
+4. Zeabur将自动检测Dockerfile并构建应用
+
+部署完成后，您可以在Zeabur控制台中设置以下环境变量：
+
+- `API_KEY_REQUIRED`: 设置为`true`以启用API密钥认证
+- `API_KEYS`: 设置有效的API密钥列表（逗号分隔）
+- `BASE_URL`: 设置基础URL，用于生成文件URL
+
+> **注意**: 在生产环境中，强烈建议启用API密钥认证。
+
 ## 📚 API文档
 
 ### 内容转换API

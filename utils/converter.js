@@ -216,15 +216,23 @@ export async function convertWithPuppeteer(content, format, options = {}) {
 
   console.log(`使用Puppeteer转换${type}到${format}`);
   
-  // 启动浏览器
-  const browser = await puppeteer.launch({
+  // 启动浏览器，支持自定义Chrome路径
+  const launchOptions = {
     headless: 'new',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage'
     ]
-  });
+  };
+  
+  // 如果设置了PUPPETEER_EXECUTABLE_PATH环境变量，使用它作为Chrome路径
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    console.log(`使用自定义Chrome路径: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+    launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+  
+  const browser = await puppeteer.launch(launchOptions);
 
   try {
     const page = await browser.newPage();

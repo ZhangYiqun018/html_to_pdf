@@ -1,13 +1,37 @@
 # 依赖目录
 node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
 
 # 环境变量
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 输出目录
+/output/
+/uploads/
 
 # 日志
-logs
+logs/
 *.log
-npm-debug.log*
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE和编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 构建输出
+/dist/
+/build/
 
 # 运行时数据
 pids
@@ -20,10 +44,6 @@ output/
 
 # 目录用于上传文件
 uploads/
-
-# 操作系统文件
-.DS_Store
-Thumbs.db
 
 # IDE和编辑器文件
 .idea/
